@@ -22,16 +22,20 @@ CREATE TABLE Catalog (
     FOREIGN KEY (pid) REFERENCES Parts(pid)
 );
 
+
+-- Suppliers
 INSERT INTO Supplier VALUES (1, 'Acme Widget Suppliers', 'Mumbai');
 INSERT INTO Supplier VALUES (2, 'Global Parts Co', 'Delhi');
 INSERT INTO Supplier VALUES (3, 'Indus Supplies', 'Bangalore');
 
+-- Parts
 INSERT INTO Parts VALUES (101, 'Bolt', 'Red');
 INSERT INTO Parts VALUES (102, 'Nut', 'Blue');
 INSERT INTO Parts VALUES (103, 'Clamp', 'Red');
 INSERT INTO Parts VALUES (104, 'Gear', 'Green');
 INSERT INTO Parts VALUES (105, 'Spring', 'Red');
 
+-- Catalog (supplier-part relationship with cost)
 INSERT INTO Catalog VALUES (1, 101, 15.0);
 INSERT INTO Catalog VALUES (1, 102, 20.0);
 INSERT INTO Catalog VALUES (1, 104, 17.0);
@@ -41,7 +45,6 @@ INSERT INTO Catalog VALUES (2, 105, 19.0);
 INSERT INTO Catalog VALUES (3, 105, 21.0);
 INSERT INTO Catalog VALUES (3, 101, 15.5);
 INSERT INTO Catalog VALUES (3, 103, 13.5);
-
 
 
 SELECT DISTINCT P.pname
@@ -69,17 +72,9 @@ WHERE NOT EXISTS (
 );
 
 
-SELECT P.pname
-FROM Parts P
-JOIN Catalog C ON P.pid = C.pid
-WHERE C.sid = (
-    SELECT sid FROM Supplier WHERE sname = 'Acme Widget Suppliers'
-)
-AND P.pid NOT IN (
-    SELECT pid FROM Catalog WHERE sid != (
-        SELECT sid FROM Supplier WHERE sname = 'Acme Widget Suppliers'
-    )
-);
+select pname from parts p,supplier s 
+where pid in(select pid from catalog group by pid having count(pid)=1) 
+and s.sname="Acme Widget Suppliers";
 
 SELECT DISTINCT C.sid
 FROM Catalog C
@@ -93,3 +88,5 @@ JOIN Supplier S ON C.sid = S.sid
 WHERE C.cost = (
     SELECT MAX(cost) FROM Catalog WHERE pid = C.pid
 );
+
+
